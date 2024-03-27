@@ -2,8 +2,6 @@
 # ===== IMPORTS =====
 
 
-import sys; sys.dont_write_bytecode = True
-
 from read_data import *
 import pyomo.environ as pyo
 
@@ -80,11 +78,14 @@ model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes,
         model.transfer[node_a, node_b] == -model.transfer[node_b, node_a]
     )
 )
-"""
+
 # Production must equal consumption.
-model.constraint_energy_balance = pyo.Constraint(model.nodes,
-    rule = lambda model, area: (
-        True
-    )
-)
-"""
+def _constraint_energy_balance(model, node):
+    
+    prod = sum ( [ model.prod_q[node, prod] for prod in model.producers ] )
+    cons = sum ( [ model.cons_cap[node, cons] for cons in model.consumers ] )
+    trans = sum ( [ model.transfer[node, other] for other in model.nodes ] )
+    
+    return prod + trans == cons
+
+model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
