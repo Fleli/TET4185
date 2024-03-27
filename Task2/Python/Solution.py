@@ -13,8 +13,6 @@ from pyomo.opt import SolverFactory as Solvers
 # Read data from the Excel file
 nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
-print(prod_cap)
-
 
 # ===== MODEL INITIALIZATION =====
 
@@ -29,6 +27,7 @@ model.producers = pyo.Set(initialize = producers)
 model.consumers = pyo.Set(initialize = consumers)
 
 # Initialize Parameters (marginal costs and capacities)
+model.susceptances = pyo.Param(model.nodes, model.nodes, initialize = line_susceptances)
 model.trans_cap = pyo.Param(model.nodes, model.nodes, initialize = line_capacities)
 model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
 model.prod_cap = pyo.Param(model.nodes, model.producers, initialize = prod_cap)
@@ -37,6 +36,7 @@ model.prod_mc = pyo.Param(model.nodes, model.producers, initialize = prod_mc)
 # Decision Variables
 model.prod_q = pyo.Var(model.nodes, model.producers, within = pyo.NonNegativeReals)
 model.transfer = pyo.Var(model.nodes, model.nodes)
+model.deltas = pyo.Var(model.nodes)
 
 
 # ===== OBJECTIVE FUNCTION =====
@@ -85,16 +85,15 @@ model.constraint_max_production = pyo.Constraint (model.nodes, model.producers,
     )
 )
 
-# Production must equal consumption.
+# Enforce the power flow equations P - D = B * delta
 def _constraint_energy_balance(model, node):
     
-    # Find the total production, consumption and transfer to a given node
-    prod = sum ( [ model.prod_q[node, prod] for prod in model.producers ] )
-    cons = sum ( [ model.cons_cap[node, cons] for cons in model.consumers ] )
-    trans = sum ( [ model.transfer[node, other] for other in model.nodes ] )
+    pN = sum ( [ model.prod_q[node, p] for p in model.producers ] )
+    qN = sum ( [ model.cons_cap[node, q] for q in model.consumers ] )
     
-    # Production plus transfer (positive incoming) must equal consumption at all nodes
-    return prod + trans == cons
+    result = sum ( [ model.susceptances[node, other] * model.deltas[other] for other in model.nodes ] )
+    
+    return pN - qN == result
 
 model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
 

@@ -24,7 +24,7 @@ def find_params(frame, nodes):
         prod_mc[node, p] = _cell(frame, 2, i + 2)
         prod_cap[node, p] = _cell(frame, 1, i + 2)
         cons_cap[node, c] = _cell(frame, 10, i + 2)
-        
+    
     return producers, consumers, prod_mc, prod_cap, cons_cap
 
 

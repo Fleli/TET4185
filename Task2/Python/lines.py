@@ -50,10 +50,5 @@ def find_lines(frame, nodes):
             pos_sum -= line_susceptances[node, other]
         line_susceptances[node, node] = pos_sum
     
-    print("SUSCEPTANCES:", line_susceptances, "\n")
-    
-    print("\n\n--")
-    print(lines)
-    print("--\n\n")
-    
+    # Return the line data we've found
     return lines, line_capacities, line_susceptances
