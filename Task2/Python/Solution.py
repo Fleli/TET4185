@@ -12,7 +12,11 @@ import pyomo.environ as pyo
 
 
 # Read data from the Excel file
-areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+
+
+print(lines)
+print(line_susceptances)
 
 
 # ===== MODEL INITIALIZATION =====
@@ -21,38 +25,33 @@ areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap
 # Create the model
 model = pyo.ConcreteModel()
 
-# Initialize Sets for areas, lines, producers, and consumers
-model.areas = pyo.Set(initialize = areas)
+# Initialize Sets for nodes, lines, producers, and consumers
+model.nodes = pyo.Set(initialize = nodes)
 model.lines = pyo.Set(initialize = lines)
 model.producers = pyo.Set(initialize = producers)
 model.consumers = pyo.Set(initialize = consumers)
 
 # Initialize Parameters (marginal costs and capacities)
-model.trans_cap = pyo.Param(model.areas, model.areas, initialize = line_capacities)
-model.cons_cap = pyo.Param(model.areas, model.consumers, initialize = cons_cap)
-model.prod_cap = pyo.Param(model.areas, model.producers, initialize = prod_cap)
-model.prod_mc = pyo.Param(model.areas, model.producers, initialize = prod_mc)
+model.trans_cap = pyo.Param(model.nodes, model.nodes, initialize = line_capacities)
+model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
+model.prod_cap = pyo.Param(model.nodes, model.producers, initialize = prod_cap)
+model.prod_mc = pyo.Param(model.nodes, model.producers, initialize = prod_mc)
 
 # Decision Variables
-model.prod_q = pyo.Var(model.areas, model.producers, within = pyo.NonNegativeReals)
-model.transfer = pyo.Var(model.areas, model.areas)
+model.prod_q = pyo.Var(model.nodes, model.producers, within = pyo.NonNegativeReals)
+model.transfer = pyo.Var(model.nodes, model.nodes)
 
 
 # ===== OBJECTIVE FUNCTION =====
 
 
-# Objective function
-model.objective = pyo.Objective (
-    
-    # We want to minimize the production costs
+# Objective function: minimizing production costs
+model.objective = pyo.Objective (sense = pyo.minimize,
     rule = lambda model: sum (
         model.prod_q[a, p] * model.prod_mc[a, p]
-            for a in model.areas
+            for a in model.nodes
             for p in model.producers
-    ),
-    
-    sense = pyo.minimize
-    
+    )
 )
 
 
@@ -60,43 +59,32 @@ model.objective = pyo.Objective (
 
 
 # Verify that the transfer from node_a to node_b isn't too small
-model.constraint_transfer_min = pyo.Constraint (
-    
-    model.areas, 
-    model.areas, 
-    
-    # Transfer must be at least -T for transfer capacity T
+model.constraint_transfer_min = pyo.Constraint (model.nodes, model.nodes, 
     rule = lambda model, node_a, node_b: (
         -model.trans_cap[node_a, node_b] 
         <= model.transfer[node_a, node_b] 
     )
-    
 )
 
-
-# Verify that the transfer from node_a to node_b isn't too small
-model.constraint_transfer_max = pyo.Constraint (
-    
-    model.areas, 
-    model.areas, 
-    
-    # Transfer must be maximum T for transfer capacity T
+# Verify that the transfer from node_a to node_b isn't too large
+model.constraint_transfer_max = pyo.Constraint (model.nodes, model.nodes, 
     rule = lambda model, node_a, node_b: (
         model.transfer[node_a, node_b] 
         <= model.trans_cap[node_a, node_b] 
     )
-    
 )
 
-
 # If X flows P->Q, then -X flows Q->P
-model.constraint_transfer_balance = pyo.Constraint(
-    
-    model.areas,
-    model.areas,
-    
+model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes, 
     rule = lambda model, node_a, node_b: (
         model.transfer[node_a, node_b] == -model.transfer[node_b, node_a]
     )
-    
 )
+"""
+# Production must equal consumption.
+model.constraint_energy_balance = pyo.Constraint(model.nodes,
+    rule = lambda model, area: (
+        True
+    )
+)
+"""

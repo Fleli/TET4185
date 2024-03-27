@@ -14,30 +14,30 @@ def read_data():
     # Find the number of rows. There are 2 "header rows".
     n_rows = len(frame) - 2
     
-    # Define arrays for areas, lines, producers and consumers
-    areas = find_nodes(frame)
+    # Define arrays for nodes, lines, producers and consumers
+    nodes = find_nodes(frame)
     producers = [ _cell(frame, 0, i + 2) for i in range(n_rows) ]
     consumers = [ _cell(frame, 9, i + 2) for i in range(n_rows) ]
     
     # Initialize empty matrices (dictionaries) for capacities and MC
-    prod_cap = fill_initial(areas, producers)
-    cons_cap = fill_initial(areas, consumers)
-    prod_mc = fill_initial(areas, producers)
+    prod_cap = fill_initial(nodes, producers)
+    cons_cap = fill_initial(nodes, consumers)
+    prod_mc = fill_initial(nodes, producers)
     
-    lines, line_capacities, line_susceptances = find_lines(frame, areas)
+    lines, line_capacities, line_susceptances = find_lines(frame, nodes)
     
     # Fill actual production capacities and marginal costs
     # These only appear on the diagonals, since there's only
     # one producer and consumer per "area"
     for i in range(n_rows):
-        a = areas[i]
+        a = nodes[i]
         p = producers[i]
         c = consumers[i]
         prod_cap[a, p] = _cell(frame, 1, i + 2)
         cons_cap[a, c] = _cell(frame, 10, i + 2)
         prod_mc[a, p] = _cell(frame, 2, i + 2)
     
-    return areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc
+    return nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc
 
 
 # Fetch the data in the cell with coordinates (x, y) in the given frame.

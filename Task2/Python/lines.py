@@ -1,15 +1,15 @@
 
 from helpers import *
 
-def find_lines(frame, areas):
+def find_lines(frame, nodes):
     
     # Column P in the Excel file
     col = 15
     
     # Initialize everything with blank data
     lines = []
-    line_capacities = fill_initial(areas, areas)
-    line_susceptances = fill_initial(areas, areas)
+    line_capacities = fill_initial(nodes, nodes)
+    line_susceptances = fill_initial(nodes, nodes)
     
     # Go through each line
     for y in range(2, len(frame)):
