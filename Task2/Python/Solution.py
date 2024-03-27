@@ -4,6 +4,7 @@
 
 from read_data import *
 import pyomo.environ as pyo
+from pyomo.opt import SolverFactory as Solvers
 
 
 # ===== FETCH INPUT =====
@@ -12,6 +13,11 @@ import pyomo.environ as pyo
 # Read data from the Excel file
 nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
+print()
+print(prod_cap)
+print()
+print(prod_mc)
+print()
 
 print(lines)
 print(line_susceptances)
@@ -82,10 +88,22 @@ model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes,
 # Production must equal consumption.
 def _constraint_energy_balance(model, node):
     
+    # Find the total production, consumption and transfer to a given node
     prod = sum ( [ model.prod_q[node, prod] for prod in model.producers ] )
     cons = sum ( [ model.cons_cap[node, cons] for cons in model.consumers ] )
     trans = sum ( [ model.transfer[node, other] for other in model.nodes ] )
     
+    # Production plus transfer (positive incoming) must equal consumption at all nodes
     return prod + trans == cons
 
 model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
+
+
+# ===== SOLVING THE OPTIMIZATION PROBLEM =====
+
+
+solver = Solvers("glpk")
+
+results = solver.solve(model,load_solutions = True)
+    
+model.display()
