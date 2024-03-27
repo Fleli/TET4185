@@ -11,6 +11,11 @@ def find_lines(frame, nodes):
     line_capacities = fill_initial(nodes, nodes)
     line_susceptances = fill_initial(nodes, nodes)
     
+    # Find all node pairs
+    for n1 in nodes:
+        for n2 in nodes:
+            lines.append((n1, n2))
+    
     # Go through each line
     for y in range(2, len(frame)):
         
@@ -28,10 +33,6 @@ def find_lines(frame, nodes):
         capacity = frame.iloc[y][col + 1]
         susceptance = frame.iloc[y][col + 2]
         
-        # Register both the lines `p-q` and `q-p`
-        lines.append((p, q))
-        lines.append((q, p))
-        
         # The line has the same capacity in both directions
         line_capacities[p, q] = capacity
         line_capacities[q, p] = capacity
@@ -39,5 +40,20 @@ def find_lines(frame, nodes):
         # ... and the same susceptance in both directions
         line_susceptances[p, q] = susceptance
         line_susceptances[q, p] = susceptance
+    
+    # Diagonal values are the positive sum of the (rest of) the corresponding row in the susceptance matrix
+    for node in nodes:
+        pos_sum = 0
+        for other in nodes:
+            if node == other:
+                continue
+            pos_sum -= line_susceptances[node, other]
+        line_susceptances[node, node] = pos_sum
+    
+    print("SUSCEPTANCES:", line_susceptances, "\n")
+    
+    print("\n\n--")
+    print(lines)
+    print("--\n\n")
     
     return lines, line_capacities, line_susceptances

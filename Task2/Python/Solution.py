@@ -13,14 +13,7 @@ from pyomo.opt import SolverFactory as Solvers
 # Read data from the Excel file
 nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
-print()
 print(prod_cap)
-print()
-print(prod_mc)
-print()
-
-print(lines)
-print(line_susceptances)
 
 
 # ===== MODEL INITIALIZATION =====
@@ -82,6 +75,13 @@ model.constraint_transfer_max = pyo.Constraint (model.nodes, model.nodes,
 model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes, 
     rule = lambda model, node_a, node_b: (
         model.transfer[node_a, node_b] == -model.transfer[node_b, node_a]
+    )
+)
+
+# Each producer has a given maximum production quantity
+model.constraint_max_production = pyo.Constraint (model.nodes, model.producers,
+    rule = lambda model, node, producer: (
+        model.prod_q[node, producer] <= prod_cap[node, producer]
     )
 )
 
