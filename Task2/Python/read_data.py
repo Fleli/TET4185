@@ -2,6 +2,7 @@
 import pandas as pd
 
 from nodes import *
+from lines import *
 
 # Read input data from the Excel file handed out.
 def read_data():
@@ -11,13 +12,12 @@ def read_data():
     
     # Find the number of rows. There are 2 "header rows".
     n_rows = len(frame) - 2
-    print(n_rows)
     
     # Define arrays for areas, lines, producers and consumers
     areas = find_nodes(frame)
-    lines = [ _cell(frame, 15, i + 2) for i in range(n_rows) ]
     producers = [ _cell(frame, 0, i + 2) for i in range(n_rows) ]
     consumers = [ _cell(frame, 9, i + 2) for i in range(n_rows) ]
+    lines, line_capacities, line_susceptances = find_lines(frame, areas)
     
     # Initialize empty matrices (dictionaries) for capacities and MC
     prod_cap = _fill_initial(areas, producers)
@@ -35,7 +35,7 @@ def read_data():
         cons_cap[a, c] = _cell(frame, 10, i + 2)
         prod_mc[a, p] = _cell(frame, 2, i + 2)
     
-    return areas, lines, producers, consumers, prod_cap, cons_cap, prod_mc
+    return areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc
 
 
 # Fetch the data in the cell with coordinates (x, y) in the given frame.

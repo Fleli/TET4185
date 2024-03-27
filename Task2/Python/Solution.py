@@ -12,7 +12,7 @@ import pyomo.environ as pyo
 
 
 # Read data from the Excel file
-areas, lines, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
 
 # ===== MODEL INITIALIZATION =====
