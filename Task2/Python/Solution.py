@@ -14,6 +14,9 @@ import pyomo.environ as pyo
 # Read data from the Excel file
 areas, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
+print(line_capacities)
+print(line_susceptances)
+
 
 # ===== MODEL INITIALIZATION =====
 
@@ -55,5 +58,7 @@ model.objective = pyo.Objective(
 
 
 # ===== CONSTRAINTS =====
+
+
 
 

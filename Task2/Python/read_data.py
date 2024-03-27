@@ -3,6 +3,7 @@ import pandas as pd
 
 from nodes import *
 from lines import *
+from helpers import *
 
 # Read input data from the Excel file handed out.
 def read_data():
@@ -17,12 +18,13 @@ def read_data():
     areas = find_nodes(frame)
     producers = [ _cell(frame, 0, i + 2) for i in range(n_rows) ]
     consumers = [ _cell(frame, 9, i + 2) for i in range(n_rows) ]
-    lines, line_capacities, line_susceptances = find_lines(frame, areas)
     
     # Initialize empty matrices (dictionaries) for capacities and MC
-    prod_cap = _fill_initial(areas, producers)
-    cons_cap = _fill_initial(areas, consumers)
-    prod_mc = _fill_initial(areas, producers)
+    prod_cap = fill_initial(areas, producers)
+    cons_cap = fill_initial(areas, consumers)
+    prod_mc = fill_initial(areas, producers)
+    
+    lines, line_capacities, line_susceptances = find_lines(frame, areas)
     
     # Fill actual production capacities and marginal costs
     # These only appear on the diagonals, since there's only
@@ -42,11 +44,3 @@ def read_data():
 def _cell(data, x, y):
     return data.iloc[y].iloc[x]
 
-
-# Helper method to fill an empty (2D) dictionary with "blank" data
-def _fill_initial(areas, participants):
-    return {
-        (area, participant): 0
-        for area in areas
-        for participant in participants
-    }
