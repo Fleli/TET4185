@@ -8,8 +8,6 @@ def read_data():
     # Build a Pandas frame by reading the xlsx file.
     frame = pd.read_excel("Problem 2 data.xlsx", "Problem 2.2 - Base case")
     
-    print(frame)
-    
     # Define arrays for areas, lines, producers and consumers
     areas = [ (i + 1) for i in range(3) ]
     lines = [ _cell(frame, 15, i + 2) for i in range(3) ]
@@ -27,23 +25,10 @@ def read_data():
     for i in range(3):
         a = areas[i]
         p = producers[i]
+        c = consumers[i]
         prod_cap[a, p] = _cell(frame, 1, i + 2)
-        cons_cap[a, p] = _cell(frame, 10, i + 2)
+        cons_cap[a, c] = _cell(frame, 10, i + 2)
         prod_mc[a, p] = _cell(frame, 2, i + 2)
-    
-    
-    print(prod_cap)
-    print(prod_mc)
-    print(cons_cap)
-    
-    print(areas)
-    print(lines)
-    print(producers)
-    print(consumers)
-    
-    
-    print("\n")
-    
     
     return areas, lines, producers, consumers, prod_cap, cons_cap, prod_mc
 

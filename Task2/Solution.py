@@ -20,8 +20,8 @@ areas, lines, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 model = pyo.ConcreteModel()
 
 # Initialize Sets for areas, lines, producers, and consumers
-model.areas = pyo.Set(areas)
-model.lines = pyo.Set(lines)
+model.areas = pyo.Set(initialize = areas)
+model.lines = pyo.Set(initialize = lines)
 model.producers = pyo.Set(initialize = producers)
 model.consumers = pyo.Set(initialize = consumers)
 
@@ -31,7 +31,7 @@ model.prod_cap = pyo.Param(model.areas, model.producers, initialize = prod_cap)
 model.prod_mc = pyo.Param(model.areas, model.producers, initialize = prod_mc)
 
 # Decision Variables
-model.prod_q = pyo.Var(model.areas, model.Producers, within = pyo.NonNegativeReals)
+model.prod_q = pyo.Var(model.areas, model.producers, within = pyo.NonNegativeReals)
 model.transfer = pyo.Var(model.areas, model.areas)
 
 
