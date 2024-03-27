@@ -2,6 +2,8 @@
 # ===== IMPORTS =====
 
 
+import sys; sys.dont_write_bytecode = True
+
 from read_data import *
 import pyomo.environ as pyo
 

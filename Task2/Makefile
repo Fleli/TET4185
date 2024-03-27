@@ -1,4 +1,4 @@
 
 run:
 	clear
-	python3 Solution.py
+	python3 Python/Solution.py

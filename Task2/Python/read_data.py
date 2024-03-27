@@ -1,18 +1,23 @@
 
 import pandas as pd
-import pyomo.environ as pyo
+
+from nodes import *
 
 # Read input data from the Excel file handed out.
 def read_data():
     
     # Build a Pandas frame by reading the xlsx file.
-    frame = pd.read_excel("Problem 2 data.xlsx", "Problem 2.2 - Base case")
+    frame = pd.read_excel("Input/Problem 2 data.xlsx", "Problem 2.2 - Base case")
+    
+    # Find the number of rows. There are 2 "header rows".
+    n_rows = len(frame) - 2
+    print(n_rows)
     
     # Define arrays for areas, lines, producers and consumers
-    areas = [ (i + 1) for i in range(3) ]
-    lines = [ _cell(frame, 15, i + 2) for i in range(3) ]
-    producers = [ _cell(frame, 0, i + 2) for i in range(3) ]
-    consumers = [ _cell(frame, 9, i + 2) for i in range(3) ]
+    areas = find_nodes(frame)
+    lines = [ _cell(frame, 15, i + 2) for i in range(n_rows) ]
+    producers = [ _cell(frame, 0, i + 2) for i in range(n_rows) ]
+    consumers = [ _cell(frame, 9, i + 2) for i in range(n_rows) ]
     
     # Initialize empty matrices (dictionaries) for capacities and MC
     prod_cap = _fill_initial(areas, producers)
@@ -22,7 +27,7 @@ def read_data():
     # Fill actual production capacities and marginal costs
     # These only appear on the diagonals, since there's only
     # one producer and consumer per "area"
-    for i in range(3):
+    for i in range(n_rows):
         a = areas[i]
         p = producers[i]
         c = consumers[i]
