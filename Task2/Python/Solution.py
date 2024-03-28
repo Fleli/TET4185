@@ -55,6 +55,7 @@ model.objective = pyo.Objective (sense = pyo.minimize,
 
 # ===== CONSTRAINTS =====
 
+
 # Minimum flow
 model.constraint_transfer_min = pyo.Constraint (
     
@@ -63,7 +64,7 @@ model.constraint_transfer_min = pyo.Constraint (
     
     rule = lambda model, node_a, node_b: (
         -model.trans_cap[node_a, node_b]
-        <= sum ( model.connection_matrix[node_a, node_b, node] * model.deltas[node] for node in model.nodes )
+        <= model.transfer[node_a, node_b]
     )
     
 )
@@ -71,11 +72,11 @@ model.constraint_transfer_min = pyo.Constraint (
 # Maximum flow
 model.constraint_transfer_max = pyo.Constraint (
     
-    model.nodes, 
-    model.nodes, 
+    model.nodes,
+    model.nodes,
     
     rule = lambda model, node_a, node_b: (
-        sum ( model.connection_matrix[node_a, node_b, node] * model.deltas[node] for node in model.nodes )
+        model.transfer[node_a, node_b]
         <= model.trans_cap[node_a, node_b]
     )
     
@@ -95,6 +96,12 @@ model.constraint_max_production = pyo.Constraint (model.nodes, model.producers,
     )
 )
 
+model.constraint_flow = pyo.Constraint (model.nodes, model.nodes,
+    rule = lambda model, node_a, node_b: (
+        model.transfer[node_a, node_b] == model.susceptances[node_a, node_b] * ( model.deltas[node_a] - model.deltas[node_b] )
+    )
+)
+
 # Enforce the power flow equations P - D = B * delta
 def _constraint_energy_balance(model, node):
     
@@ -103,7 +110,9 @@ def _constraint_energy_balance(model, node):
     
     result = sum ( model.susceptances[node, other] * model.deltas[other] for other in model.nodes )
     
-    return pN - qN + result == 0
+    print(result)
+    
+    return pN + result == qN
 
 model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
 
@@ -122,4 +131,4 @@ results = Solvers("glpk").solve(model, load_solutions = True)
 
 # Display the results
 model.display()
-#model.dual.display()
+# model.dual.display()
