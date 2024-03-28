@@ -52,4 +52,4 @@ def build_x(argv: list[str]) -> dict[str, int]:
         print(" ", it)
     print()
     
-    return x
+    return x, flexible_demand, include_CO2_column

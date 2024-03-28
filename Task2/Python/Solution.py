@@ -13,10 +13,13 @@ from pyomo.opt import SolverFactory as Solvers
 
 
 # Build a dictionary of x coordinates
-cols_x = build_x(sys.argv)
+cols_x, flexible_demand, co2_emissions = build_x(sys.argv)
 
 # Read data from the Excel file
-nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data(cols_x)
+nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap = read_data(cols_x, flexible_demand, co2_emissions)
+
+
+safe = 100000000
 
 
 # ===== MODEL INITIALIZATION =====
@@ -38,6 +41,10 @@ model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
 model.prod_cap = pyo.Param(model.nodes, model.producers, initialize = prod_cap)
 model.prod_mc = pyo.Param(model.nodes, model.producers, initialize = prod_mc)
 
+# Opionally include marginal costs (WTP) for consumers
+if flexible_demand:
+    model.cons_mc = pyo.Param(model.nodes, model.consumers, intiialize = cons_mc)
+
 # Decision Variables
 model.prod_q = pyo.Var(model.nodes, model.producers, within = pyo.NonNegativeReals)
 model.transfer = pyo.Var(model.nodes, model.nodes)
@@ -47,13 +54,39 @@ model.deltas = pyo.Var(model.nodes)
 # ===== OBJECTIVE FUNCTION =====
 
 
-# Objective function: minimizing production costs
-model.objective = pyo.Objective (sense = pyo.minimize,
-    rule = lambda model: sum (
-        model.prod_q[a, p] * model.prod_mc[a, p]
-            for a in model.nodes
+def _objective_maximizeSocialWelfare(model):
+    
+    consumer_value = 0
+    for consumer in model.consumers:
+        mc = model.cons_mc[consumer]
+        if mc == None:
+            mc = safe
+        consumer_value += mc * model.cons_q[consumer]
+    
+    producer_costs = 0
+    for producer in model.producers:
+        mc = model.prod_mc[producer]
+        producer_costs += mc * model.prod_q[producer]
+    
+    return consumer_value - producer_costs
+
+
+def _objective_minimizeGenerationCosts(model):
+    return sum(
+        model.prod_q[node, p] * model.prod_mc[node, p] 
             for p in model.producers
+            for node in model.nodes
     )
+
+
+# Which objective function we choose (and whether to maximize or minimize) depends
+# on the problem we're solving.
+model.objective = pyo.Objective (
+    sense = pyo.maximize,
+    rule = _objective_maximizeSocialWelfare
+) if flexible_demand else pyo.Objective (
+    sense = pyo.minimize,
+    rule = _objective_minimizeGenerationCosts
 )
 
 
