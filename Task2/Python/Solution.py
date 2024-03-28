@@ -96,6 +96,7 @@ model.constraint_max_production = pyo.Constraint (model.nodes, model.producers,
     )
 )
 
+# Require flow A->B be equal to susceptance A->B times difference in bus phase angles
 model.constraint_flow = pyo.Constraint (model.nodes, model.nodes,
     rule = lambda model, node_a, node_b: (
         model.transfer[node_a, node_b] == model.susceptances[node_a, node_b] * ( model.deltas[node_a] - model.deltas[node_b] )
@@ -126,9 +127,9 @@ model.ccc = pyo.Constraint(rule = lambda model: (
 
 
 # Solve the model, including dual values
-model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+model.dual = pyo.Suffix(direction = pyo.Suffix.IMPORT)
 results = Solvers("glpk").solve(model, load_solutions = True)
 
 # Display the results
 model.display()
-# model.dual.display()
+model.dual.display()
