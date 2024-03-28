@@ -14,15 +14,6 @@ from pyomo.opt import SolverFactory as Solvers
 nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
 
 
-print(nodes)
-print(line_capacities)
-print(line_susceptances)
-print(producers)
-print(consumers)
-print(prod_cap)
-print(prod_mc)
-
-
 # ===== MODEL INITIALIZATION =====
 
 

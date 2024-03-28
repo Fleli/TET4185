@@ -17,7 +17,7 @@ def find_params(frame, nodes):
     
     for i in range(n_rows):
         for x, array in [(p_x, producers), (c_x, consumers)]:
-            entity = _cell(frame, x, i + 2)
+            entity = cell(frame, x, i + 2)
             if type(entity) == str and entity != "":
                 array.append(entity)
     
@@ -33,19 +33,13 @@ def find_params(frame, nodes):
     # one producer and consumer per "area"
     for i in range(len(producers)):
         p = producers[i]
-        node = _cell(frame, p_x + 3, i + 2)
-        prod_mc[node, p] = _cell(frame, 2, i + 2)
-        prod_cap[node, p] = _cell(frame, 1, i + 2)
+        node = cell(frame, p_x + 3, i + 2)
+        prod_mc[node, p] = cell(frame, 2, i + 2)
+        prod_cap[node, p] = cell(frame, 1, i + 2)
     
     for i in range(len(consumers)):
         c = consumers[i]
-        node = _cell(frame, c_x + 2, i + 2)
-        cons_cap[node, c] = _cell(frame, 10, i + 2)
+        node = cell(frame, c_x + 2, i + 2)
+        cons_cap[node, c] = cell(frame, 10, i + 2)
     
     return producers, consumers, prod_mc, prod_cap, cons_cap
-
-
-# Fetch the data in the cell with coordinates (x, y) in the given frame.
-def _cell(data, x, y):
-    return data.iloc[y].iloc[x]
-

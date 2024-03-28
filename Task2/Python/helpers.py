@@ -6,3 +6,7 @@ def fill_initial(a, b):
             for an in a
             for bn in b
     }
+
+# Fetch the data in the cell with coordinates (x, y) in the given frame.
+def cell(data, x, y):
+    return data.iloc[y].iloc[x]

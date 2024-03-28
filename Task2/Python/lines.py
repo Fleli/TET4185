@@ -19,8 +19,15 @@ def find_lines(frame, nodes):
     # Go through each line
     for y in range(2, len(frame)):
         
+        # Find the value of the cell
+        data = cell(frame, 15, y)
+        
+        # There's no line here if the data isn't a string.
+        if (not type(data) == str):
+            continue
+        
         # Split 'Line p-q' and fetch the 'p-q' part
-        s = frame.iloc[y][15].split(" ")[1]
+        s = data.split(" ")[1]
         
         # `to`, `from` node of the line
         p, q = s.split("-")
