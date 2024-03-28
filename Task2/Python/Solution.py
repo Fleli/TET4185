@@ -11,7 +11,7 @@ from pyomo.opt import SolverFactory as Solvers
 
 
 # Read data from the Excel file
-nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc, connection_matrix = read_data()
 
 
 # ===== MODEL INITIALIZATION =====
@@ -27,6 +27,7 @@ model.producers = pyo.Set(initialize = producers)
 model.consumers = pyo.Set(initialize = consumers)
 
 # Initialize Parameters (marginal costs and capacities)
+model.connection_matrix = pyo.Param(model.nodes, model.nodes, model.nodes, initialize = connection_matrix)
 model.susceptances = pyo.Param(model.nodes, model.nodes, initialize = line_susceptances)
 model.trans_cap = pyo.Param(model.nodes, model.nodes, initialize = line_capacities)
 model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
@@ -54,21 +55,30 @@ model.objective = pyo.Objective (sense = pyo.minimize,
 
 # ===== CONSTRAINTS =====
 
-
-# Verify that the transfer from node_a to node_b isn't too small
-model.constraint_transfer_min = pyo.Constraint (model.nodes, model.nodes, 
+# Minimum flow
+model.constraint_transfer_min = pyo.Constraint (
+    
+    model.nodes, 
+    model.nodes,
+    
     rule = lambda model, node_a, node_b: (
-        -model.trans_cap[node_a, node_b] 
-        <= model.transfer[node_a, node_b] 
+        -model.trans_cap[node_a, node_b]
+        <= sum ( model.connection_matrix[node_a, node_b, node] * model.deltas[node] for node in model.nodes )
     )
+    
 )
 
-# Verify that the transfer from node_a to node_b isn't too large
-model.constraint_transfer_max = pyo.Constraint (model.nodes, model.nodes, 
+# Maximum flow
+model.constraint_transfer_max = pyo.Constraint (
+    
+    model.nodes, 
+    model.nodes, 
+    
     rule = lambda model, node_a, node_b: (
-        model.transfer[node_a, node_b] 
-        <= model.trans_cap[node_a, node_b] 
+        sum ( model.connection_matrix[node_a, node_b, node] * model.deltas[node] for node in model.nodes )
+        <= model.trans_cap[node_a, node_b]
     )
+    
 )
 
 # If X flows P->Q, then -X flows Q->P
@@ -81,28 +91,35 @@ model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes,
 # Each producer has a given maximum production quantity
 model.constraint_max_production = pyo.Constraint (model.nodes, model.producers,
     rule = lambda model, node, producer: (
-        model.prod_q[node, producer] <= prod_cap[node, producer]
+        model.prod_q[node, producer] <= model.prod_cap[node, producer]
     )
 )
 
 # Enforce the power flow equations P - D = B * delta
 def _constraint_energy_balance(model, node):
     
-    pN = sum ( [ model.prod_q[node, p] for p in model.producers ] )
-    qN = sum ( [ model.cons_cap[node, q] for q in model.consumers ] )
+    pN = sum ( model.prod_q[node, p] for p in model.producers )
+    qN = sum ( model.cons_cap[node, q] for q in model.consumers )
     
-    result = sum ( [ model.susceptances[node, other] * model.deltas[other] for other in model.nodes ] )
+    result = sum ( model.susceptances[node, other] * model.deltas[other] for other in model.nodes )
     
-    return pN - qN == result
+    return pN - qN + result == 0
 
 model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
+
+# Set the (deviation of the) first node to be the known, zero-valued bus.
+model.ccc = pyo.Constraint(rule = lambda model: (
+    model.deltas["Node 1"] == 0
+))
 
 
 # ===== SOLVING THE OPTIMIZATION PROBLEM =====
 
 
-solver = Solvers("glpk")
+# Solve the model, including dual values
+model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+results = Solvers("glpk").solve(model, load_solutions = True)
 
-results = solver.solve(model,load_solutions = True)
-    
+# Display the results
 model.display()
+#model.dual.display()
