@@ -2,6 +2,8 @@
 # ===== IMPORTS =====
 
 
+import sys
+from helpers import *
 from read_data import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory as Solvers
@@ -10,8 +12,11 @@ from pyomo.opt import SolverFactory as Solvers
 # ===== FETCH INPUT =====
 
 
+# Build a dictionary of x coordinates
+cols_x = build_x(sys.argv)
+
 # Read data from the Excel file
-nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data(cols_x)
 
 
 # ===== MODEL INITIALIZATION =====
@@ -56,31 +61,20 @@ model.objective = pyo.Objective (sense = pyo.minimize,
 
 
 # Minimum flow
-model.constraint_transfer_min = pyo.Constraint (
-    
-    model.nodes, 
-    model.nodes,
-    
+model.constraint_transfer_min = pyo.Constraint (model.nodes, model.nodes,
     rule = lambda model, node_a, node_b: (
         -model.trans_cap[node_a, node_b]
         <= model.transfer[node_a, node_b]
     )
-    
 )
 
 # Maximum flow
-model.constraint_transfer_max = pyo.Constraint (
-    
-    model.nodes,
-    model.nodes,
-    
+model.constraint_transfer_max = pyo.Constraint (model.nodes, model.nodes,
     rule = lambda model, node_a, node_b: (
         model.transfer[node_a, node_b]
         <= model.trans_cap[node_a, node_b]
     )
-    
 )
-
 
 # If X flows P->Q, then -X flows Q->P
 model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes, 
@@ -103,17 +97,14 @@ model.constraint_flow = pyo.Constraint (model.nodes, model.nodes,
     )
 )
 
-# Enforce the power flow equations P - D = B * delta
-def _constraint_energy_balance(model, node):
-    
-    pN = sum ( model.prod_q[node, p] for p in model.producers )
-    qN = sum ( model.cons_cap[node, q] for q in model.consumers )
-    
-    result = sum ( model.susceptances[node, other] * model.deltas[other] for other in model.nodes )
-    
-    return pN + result == qN
-
-model.constraint_energy_balance = pyo.Constraint(model.nodes, rule = _constraint_energy_balance)
+# Enforce energy balance (production + net transfer = consumption)
+model.constraint_energy_balance = pyo.Constraint(model.nodes, 
+    rule = lambda model, node: (
+        sum(model.prod_q[node, p] for p in model.producers)                                         # Local production
+        + sum(model.susceptances[node, other] * model.deltas[other] for other in model.nodes)       # Inflow (transfer)
+        == sum(model.cons_cap[node, q] for q in model.consumers)                                    # Local consumption
+    )
+)
 
 # Set the (deviation of the) first node to be the known, zero-valued bus.
 model.ccc = pyo.Constraint(rule = lambda model: (

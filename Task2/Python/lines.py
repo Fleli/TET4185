@@ -1,10 +1,7 @@
 
 from helpers import *
 
-def find_lines(frame, nodes):
-    
-    # Column P in the Excel file
-    col = 15
+def find_lines(frame, nodes, cols_x):
     
     # Initialize everything with blank data
     lines = []
@@ -20,7 +17,7 @@ def find_lines(frame, nodes):
     for y in range(2, len(frame)):
         
         # Find the value of the cell
-        data = cell(frame, 15, y)
+        data = cell(frame, cols_x["lines"], y)
         
         # There's no line here if the data isn't a string.
         if (not type(data) == str):
@@ -37,8 +34,8 @@ def find_lines(frame, nodes):
         q = "Node " + q
         
         # Capacity and susceptance are found to the right of the line names
-        capacity = frame.iloc[y][col + 1]
-        susceptance = frame.iloc[y][col + 2]
+        capacity = frame.iloc[y][cols_x["capacities"]]
+        susceptance = frame.iloc[y][cols_x["susceptances"]]
         
         # The line has the same capacity in both directions
         line_capacities[p, q] = capacity
