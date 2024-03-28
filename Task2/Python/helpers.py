@@ -16,30 +16,40 @@ def cell(data, x, y):
 # Build a dictionary of column name -> x coodinate based on argv
 def build_x(argv: list[str]) -> dict[str, int]:
     
-    x = {
-        
-        "name prod": 0,
-        "cap prod": 1,
-        "mc prod": 2,
-        "node prod": 3,
-        
-        "name cons": 9,
-        "cap cons": 10,
-        "mc cons": 11,
-        "node cons": 11,
-        
-        "lines": 15,
-        "capacities": 16,
-        "susceptances": 17
-        
-    }
+    x = { }
     
     task = int(argv[1])
-    
     flexible_demand = (task >= 4)
     include_CO2_column = (task == 5)
     
-    if flexible_demand:
-        x["node cons"] += 1
+    # Start index of 0
+    index = 0
+    
+    # Find index for each of the generation related columns
+    for name in ["name prod", "cap prod", "mc prod", "node prod"] + ( ["co2"] if include_CO2_column else [] ) + ["slack prod"]:
+        x[name] = index
+        index += 1
+    
+    # ... then 4 blank spaces
+    index += 4
+    
+    # ... then consumer (load) data
+    for name in ["name cons", "cap cons"] + ( ["mc cons"] if flexible_demand else [] ) + ["node cons"]:
+        x[name] = index
+        index += 1
+    
+    # ... then 2 or 3 blank spaces (see the Excel file)
+    index += (2 if (task == 4) else 3)
+    
+    # ... then line information (names, capacities and susceptances)
+    for name in ["lines", "capacities", "susceptances"]:
+        x[name] = index
+        index += 1
+    
+    print()
+    print("x =")
+    for it in x.items():
+        print(" ", it)
+    print()
     
     return x
