@@ -5,7 +5,6 @@ from nodes import *
 from lines import *
 from params import *
 from helpers import *
-from connections import *
 
 # Read input data from the Excel file handed out.
 def read_data():
@@ -20,8 +19,5 @@ def read_data():
     # Find line information, including the lines themselves, their capacities, and susceptances B
     lines, line_capacities, line_susceptances = find_lines(frame, nodes)
     
-    # Find connection matrix F
-    connection_matrix = find_connection_matrix(nodes, lines, line_susceptances)
-    
     # Return the values we've found
-    return nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc, connection_matrix
+    return nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc

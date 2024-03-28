@@ -11,7 +11,16 @@ from pyomo.opt import SolverFactory as Solvers
 
 
 # Read data from the Excel file
-nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc, connection_matrix = read_data()
+nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_cap, cons_cap, prod_mc = read_data()
+
+
+print(nodes)
+print(line_capacities)
+print(line_susceptances)
+print(producers)
+print(consumers)
+print(prod_cap)
+print(prod_mc)
 
 
 # ===== MODEL INITIALIZATION =====
@@ -27,7 +36,6 @@ model.producers = pyo.Set(initialize = producers)
 model.consumers = pyo.Set(initialize = consumers)
 
 # Initialize Parameters (marginal costs and capacities)
-model.connection_matrix = pyo.Param(model.nodes, model.nodes, model.nodes, initialize = connection_matrix)
 model.susceptances = pyo.Param(model.nodes, model.nodes, initialize = line_susceptances)
 model.trans_cap = pyo.Param(model.nodes, model.nodes, initialize = line_capacities)
 model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
@@ -82,6 +90,7 @@ model.constraint_transfer_max = pyo.Constraint (
     
 )
 
+
 # If X flows P->Q, then -X flows Q->P
 model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes, 
     rule = lambda model, node_a, node_b: (
@@ -110,8 +119,6 @@ def _constraint_energy_balance(model, node):
     qN = sum ( model.cons_cap[node, q] for q in model.consumers )
     
     result = sum ( model.susceptances[node, other] * model.deltas[other] for other in model.nodes )
-    
-    print(result)
     
     return pN + result == qN
 
