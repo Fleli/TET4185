@@ -1,5 +1,5 @@
 
-from helpers import *
+from ReadData.helpers import *
 
 def find_lines(frame, nodes, cols_x):
     

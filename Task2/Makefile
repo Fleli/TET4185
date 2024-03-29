@@ -1,4 +1,4 @@
 
 run:
 	clear
-	python3 Python/Solution.py "$(T)"
+	python3 Python/main.py "$(T)"
