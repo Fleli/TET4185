@@ -18,9 +18,12 @@ cols_x, flexible_demand, co2_emissions = build_x(sys.argv)
 # Read data from the Excel file
 nodes, lines, line_capacities, line_susceptances, producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap = read_data(cols_x, flexible_demand, co2_emissions)
 
+# We interpret NAN values as being willing to pay anything it takes, so we set the WTP extremely high
+for key, value in cons_mc.items():
+    if value == "NAN":
+        cons_mc[key] = 100000
 
-safe = 100000000
-
+print(flexible_demand)
 
 # ===== MODEL INITIALIZATION =====
 
@@ -41,14 +44,15 @@ model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = cons_cap)
 model.prod_cap = pyo.Param(model.nodes, model.producers, initialize = prod_cap)
 model.prod_mc = pyo.Param(model.nodes, model.producers, initialize = prod_mc)
 
-# Opionally include marginal costs (WTP) for consumers
-if flexible_demand:
-    model.cons_mc = pyo.Param(model.nodes, model.consumers, intiialize = cons_mc)
-
 # Decision Variables
 model.prod_q = pyo.Var(model.nodes, model.producers, within = pyo.NonNegativeReals)
 model.transfer = pyo.Var(model.nodes, model.nodes)
 model.deltas = pyo.Var(model.nodes)
+
+# Optionally include additional parameters and variables if demand is flexible
+if flexible_demand:
+    model.cons_mc = pyo.Param(model.nodes, model.consumers, initialize = cons_mc)
+    model.cons_q = pyo.Var(model.nodes, model.consumers, within = pyo.NonNegativeReals)
 
 
 # ===== OBJECTIVE FUNCTION =====
@@ -56,23 +60,23 @@ model.deltas = pyo.Var(model.nodes)
 
 def _objective_maximizeSocialWelfare(model):
     
-    consumer_value = 0
-    for consumer in model.consumers:
-        mc = model.cons_mc[consumer]
-        if mc == None:
-            mc = safe
-        consumer_value += mc * model.cons_q[consumer]
+    consumer_value = sum (
+        model.cons_mc[node, c] * model.cons_q[node, c]
+            for c in model.consumers
+            for node in model.nodes
+    )
     
-    producer_costs = 0
-    for producer in model.producers:
-        mc = model.prod_mc[producer]
-        producer_costs += mc * model.prod_q[producer]
+    producer_costs = sum (
+        model.prod_mc[node, p] * model.prod_q[node, p]
+            for p in model.producers
+            for node in model.nodes
+    )
     
     return consumer_value - producer_costs
 
 
 def _objective_minimizeGenerationCosts(model):
-    return sum(
+    return sum (
         model.prod_q[node, p] * model.prod_mc[node, p] 
             for p in model.producers
             for node in model.nodes
@@ -131,13 +135,24 @@ model.constraint_flow = pyo.Constraint (model.nodes, model.nodes,
 )
 
 # Enforce energy balance (production + net transfer = consumption)
-model.constraint_energy_balance = pyo.Constraint(model.nodes, 
+model.constraint_energy_balance = pyo.Constraint (model.nodes, 
     rule = lambda model, node: (
         sum(model.prod_q[node, p] for p in model.producers)                                         # Local production
-        + sum(model.susceptances[node, other] * model.deltas[other] for other in model.nodes)       # Inflow (transfer)
-        == sum(model.cons_cap[node, q] for q in model.consumers)                                    # Local consumption
+        + sum(model.susceptances[node, other] * model.deltas[other] for other in model.nodes)       # + Transfer (into)
+        == (                                                                                        # = Consumption
+            sum(model.cons_q[node, q] for q in model.consumers)
+            if flexible_demand else                                                                 # Either fixed or flexible consumption
+            sum(model.cons_cap[node, q] for q in model.consumers)
+        )
     )
 )
+
+if flexible_demand:
+    model.constraint_max_consumption = pyo.Constraint (model.nodes, model.consumers,
+        rule = lambda model, node, consumer: (
+            model.cons_q[node, consumer] <= model.cons_cap[node, consumer]
+        )
+    )
 
 # Set the (deviation of the) first node to be the known, zero-valued bus.
 model.ccc = pyo.Constraint(rule = lambda model: (

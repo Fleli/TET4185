@@ -14,11 +14,22 @@ def cell(data, x, y):
 
 
 # Build a dictionary of column name -> x coodinate based on argv
-def build_x(argv: list[str]) -> dict[str, int]:
+def build_x(argv):
     
     x = { }
     
     task = int(argv[1])
+    
+    match task:
+        case 2:
+            x["SHEETNAME"] = "Problem 2.2 - Base case"
+        case 3:
+            x["SHEETNAME"] = "Problem 2.3 - Generators"
+        case 4:
+            x["SHEETNAME"] = "Problem 2.4 - Loads"
+        case 5:
+            x["SHEETNAME"] = "Problem 2.5 - Environmental"
+    
     flexible_demand = (task >= 4)
     include_CO2_column = (task == 5)
     
