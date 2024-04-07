@@ -18,22 +18,25 @@ def build_x(argv):
     
     x = { }
     
-    task = int(argv[1])
+    task = argv[1]
+    
+    flexible_demand = False
     
     match task:
-        case 2:
+        case "2":
             x["SHEETNAME"] = "Problem 2.2 - Base case"
-        case 3:
+        case "3":
             x["SHEETNAME"] = "Problem 2.3 - Generators"
-        case 4:
+        case "4d", "4e":
             x["SHEETNAME"] = "Problem 2.4 - Loads"
-        case 5:
+            flexible_demand = (task == "4e")
+        case "5":
             x["SHEETNAME"] = "Problem 2.5 - Environmental"
+            flexible_demand = True
         case _:
             print("Unrecognized task number", task)
             exit(1)
     
-    flexible_demand = (task >= 4)
     include_CO2_column = (task == 5)
     
     # Start index of 0

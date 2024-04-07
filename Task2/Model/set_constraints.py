@@ -34,6 +34,7 @@ def set_model_constraints(model, flexible_demand):
     )
     
     
+    
     # === QUANTITY LIMITS ===
     
     
@@ -69,9 +70,9 @@ def set_model_constraints(model, flexible_demand):
     # Enforce energy balance (production + net transfer = consumption)
     model.constraint_energy_balance = pyo.Constraint (model.nodes, 
         rule = lambda model, node: (
-            sum(model.prod_q[node, p] for p in model.producers)                                         # Local production
-            + sum(model.susceptances[node, other] * model.deltas[other] * per_unit_base for other in model.nodes)       # + Transfer (into)
-            == sum( model.cons_q[node, q] for q in model.consumers)                                     # = Consumption
+            sum(model.prod_q[node, p] for p in model.producers)                                                         # Local production
+            + sum(model.susceptances[node, other] * model.deltas[other] * per_unit_base for other in model.nodes)       # + Transfer
+            == sum( model.cons_q[node, q] for q in model.consumers)                                                     # = Consumption
         )
     )
     

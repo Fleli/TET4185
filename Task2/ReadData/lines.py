@@ -34,8 +34,8 @@ def find_lines(frame, nodes, cols_x):
         q = "Node " + q
         
         # Capacity and susceptance are found to the right of the line names
-        capacity = frame.iloc[y][cols_x["capacities"]]
-        susceptance = frame.iloc[y][cols_x["susceptances"]]
+        capacity = frame.iloc[y].iloc[cols_x["capacities"]]
+        susceptance = frame.iloc[y].iloc[cols_x["susceptances"]]
         
         # The line has the same capacity in both directions
         line_capacities[p, q] = capacity
