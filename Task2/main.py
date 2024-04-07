@@ -19,13 +19,13 @@ cols_x, flexible_demand, co2_emissions = build_x(Process.argv)
 data = read_data(cols_x, flexible_demand, co2_emissions)
 
 # Initialize the model with its sets, parameters and variables
-model = init_model(data, flexible_demand)
+model = init_model(data, flexible_demand, co2_emissions)
 
 # Set the model's objective function
 set_model_objective(model, flexible_demand)
 
 # Set the model's constraints
-set_model_constraints(model, flexible_demand)
+set_model_constraints(model, flexible_demand, co2_emissions)
 
 # Solve the model
 solve_model(model)

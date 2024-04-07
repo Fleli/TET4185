@@ -14,7 +14,9 @@ def read_data(context, flexible_demand, co2_emissions):
     
     # Find nodes and prod/cons parameters (capacities and MCs)
     nodes = find_nodes(frame, context)
-    producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap = find_params(frame, nodes, context, flexible_demand)
+    producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap, co2 = find_params(frame, nodes, context, flexible_demand, co2_emissions)
+    
+    print(co2)
     
     # Find line information, including the lines themselves, their capacities, and susceptances B
     lines, line_capacities, line_susceptances = find_lines(frame, nodes, context)
@@ -22,7 +24,7 @@ def read_data(context, flexible_demand, co2_emissions):
     # We interpret NAN values as being willing to pay anything it takes, so we set the WTP extremely high
     for key, value in cons_mc.items():
         if value == "NAN":
-            cons_mc[key] = 100000
+            cons_mc[key] = 5000
     
     # Return a dictionary with all the data we've extracted
     return {
@@ -35,5 +37,6 @@ def read_data(context, flexible_demand, co2_emissions):
         "prod_mc": prod_mc,
         "prod_cap": prod_cap,
         "cons_mc": cons_mc,
-        "cons_cap": cons_cap
+        "cons_cap": cons_cap,
+        "co2": co2
     }

@@ -1,7 +1,8 @@
 
 import pyomo.environ as pyo
+import numpy as np
 
-def set_model_constraints(model, flexible_demand):
+def set_model_constraints(model, flexible_demand, co2_emissions):
     
     
     per_unit_base = 100
@@ -75,6 +76,28 @@ def set_model_constraints(model, flexible_demand):
             == sum( model.cons_q[node, q] for q in model.consumers)                                                     # = Consumption
         )
     )
+    
+    
+    # === CLEAN ENERGY STANDARD (CES) ===
+    
+    
+    def constraint_ces(model):
+        
+        total = 0
+        zero_emission = 0
+        
+        for node in model.nodes:
+            for producer in model.producers:
+                prod = model.prod_q[node, producer]
+                total += prod
+                if model.co2[node, producer] == 0:
+                    zero_emission += prod
+        
+        return zero_emission >= 0.2 * total
+    
+    # Require 20% of produced energy to be zero-emission
+    if co2_emissions:
+        model.constraint_ces = pyo.Constraint(rule = constraint_ces)
     
     
     # === OTHER CONSTRAINTS ===

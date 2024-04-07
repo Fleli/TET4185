@@ -1,7 +1,7 @@
 
 import pyomo.environ as pyo
 
-def init_model(data: dict, flexible_demand: bool):
+def init_model(data: dict, flexible_demand: bool, co2_emissions: bool):
     
     # Create the model
     model = pyo.ConcreteModel()
@@ -28,6 +28,10 @@ def init_model(data: dict, flexible_demand: bool):
     # Optionally include additional parameters and variables if demand is flexible
     if flexible_demand:
         model.cons_mc = pyo.Param(model.nodes, model.consumers, initialize = data["cons_mc"])
+    
+    # Optionally include the CO2 emissions as a parameter
+    if co2_emissions:
+        model.co2 = pyo.Param(model.nodes, model.producers, initialize = data["co2"])
     
     return model
     

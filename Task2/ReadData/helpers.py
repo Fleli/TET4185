@@ -9,8 +9,8 @@ def fill_initial(a, b):
 
 
 # Fetch the data in the cell with coordinates (x, y) in the given frame.
-def cell(data, x, y):
-    return data.iloc[y].iloc[x]
+def cell(frame, x, y):
+    return frame.iloc[y].iloc[x]
 
 
 # Build a dictionary of column name -> x coodinate based on argv
@@ -20,6 +20,7 @@ def build_x(argv):
     
     task = argv[1]
     
+    cons_mc_in_excel = False
     flexible_demand = False
     
     match task:
@@ -27,7 +28,7 @@ def build_x(argv):
             x["SHEETNAME"] = "Problem 2.2 - Base case"
         case "3":
             x["SHEETNAME"] = "Problem 2.3 - Generators"
-        case "4d", "4e":
+        case "4d" | "4e":
             x["SHEETNAME"] = "Problem 2.4 - Loads"
             flexible_demand = (task == "4e")
         case "5":
@@ -37,7 +38,8 @@ def build_x(argv):
             print("Unrecognized task number", task)
             exit(1)
     
-    include_CO2_column = (task == 5)
+    include_CO2_column = (task == "5")
+    cons_mc_in_excel = flexible_demand or (task == "4d")
     
     # Start index of 0
     index = 0
@@ -51,12 +53,12 @@ def build_x(argv):
     index += 4
     
     # ... then consumer (load) data
-    for name in ["name cons", "cap cons"] + ( ["mc cons"] if flexible_demand else [] ) + ["node cons"]:
+    for name in ["name cons", "cap cons"] + ( ["mc cons"] if (cons_mc_in_excel) else [] ) + ["node cons"]:
         x[name] = index
         index += 1
     
     # ... then 2 or 3 blank spaces (see the Excel file)
-    index += (2 if (task == 4) else 3)
+    index += (2 if (task == "4d" or task == "4e") else 3)
     
     # ... then line information (names, capacities and susceptances)
     for name in ["lines", "capacities", "susceptances"]:
