@@ -1,0 +1,17 @@
+
+macro HEAP_BEGIN = [void*] 10000;
+macro HEAP_NOW = [void**] 9994;
+
+func __heap_init() {
+    *HEAP_NOW = HEAP_BEGIN;
+}
+
+func malloc(size: int) -> void* {
+    
+    var ptr = *HEAP_NOW;
+    
+    *HEAP_NOW @+= size;
+    
+    return ptr;
+    
+}

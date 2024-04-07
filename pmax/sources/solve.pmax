@@ -1,0 +1,54 @@
+
+macro NULL = [void*] 0;
+
+macro BOOL_TRUE = 1;
+macro BOOL_FALSE = 0;
+
+func solve(producers: Producer**, consumers: Consumer**) -> (int, int) {
+    
+    // price, quantity
+    var solution: (int, int);
+    
+    var p = 0;
+    var c = 0;
+    
+    var q = 0;
+    var cons = *consumers;
+    
+    var last = 0;
+    
+    var continue = BOOL_TRUE;
+    
+    while continue {
+        
+        if (*(producers + p))->quantity < (*(consumers + c))->quantity {
+            last = 0;
+            p @+= 1;
+        } else {
+            last = 1;
+            c @+= 1;
+        }
+        
+        if (*(producers + p))->price > (*(consumers + c))->price {
+            continue = BOOL_FALSE;
+        }
+        
+    }
+    
+    if last {
+        c @-= 1;
+    } else {
+        p @-= 1;
+    }
+    
+    if (*(consumers + c))->quantity < (*(producers + p))->quantity {
+        solution.f0 = (*(producers + p))->price;
+        solution.f1 = (*(consumers + c))->quantity;
+    } else {
+        solution.f0 = (*(consumers + c))->price;
+        solution.f1 = (*(producers + p))->quantity;
+    }
+    
+    return solution;
+    
+}

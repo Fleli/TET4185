@@ -1,0 +1,10 @@
+
+struct Producer {
+    var quantity: int;
+    var price: int;
+}
+
+struct Consumer {
+    var quantity: int;
+    var price: int;
+}
