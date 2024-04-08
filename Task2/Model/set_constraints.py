@@ -2,8 +2,10 @@
 import pyomo.environ as pyo
 import numpy as np
 
-def set_model_constraints(model, flexible_demand, co2_emissions):
+def set_model_constraints(model, flexible_demand, ces, cat):
     
+    
+    print("FLEXIBLE:", flexible_demand)
     
     per_unit_base = 100
     
@@ -26,14 +28,6 @@ def set_model_constraints(model, flexible_demand, co2_emissions):
             <= model.trans_cap[node_a, node_b]
         )
     )
-    
-    # If X flows P->Q, then -X flows Q->P
-    model.constraint_transfer_balance = pyo.Constraint (model.nodes, model.nodes, 
-        rule = lambda model, node_a, node_b: (
-            model.transfer[node_a, node_b] == -model.transfer[node_b, node_a]
-        )
-    )
-    
     
     
     # === QUANTITY LIMITS ===
@@ -96,15 +90,30 @@ def set_model_constraints(model, flexible_demand, co2_emissions):
         return zero_emission >= 0.2 * total
     
     # Require 20% of produced energy to be zero-emission
-    if co2_emissions:
+    if ces:
         model.constraint_ces = pyo.Constraint(rule = constraint_ces)
+    
+    
+    def constraint_cat(model):
+        
+        total = sum(
+            model.prod_q[node, producer] * model.co2[node, producer]
+                for producer in model.producers
+                for node in model.nodes
+        )
+        
+        return total <= 950_000
+    
+    # Require emissions less than 950 000 (the result from CES)
+    if cat:
+        model.constraint_cat = pyo.Constraint(rule = constraint_cat)
     
     
     # === OTHER CONSTRAINTS ===
     
     
     # Set the (deviation of the) first node to be the known, zero-valued bus.
-    model.ccc = pyo.Constraint(rule = lambda model: (
+    model.constraint_slack = pyo.Constraint(rule = lambda model: (
         model.deltas["Node 1"] == 0
     ))
     

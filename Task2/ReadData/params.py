@@ -1,7 +1,7 @@
 
 from ReadData.helpers import *
 
-def find_params(frame, nodes, cols_x, flexible_demand, co2_emissions):
+def find_params(frame, nodes, cols_x, flexible_demand, ces, cat):
     
     # Find the number of rows. There are 2 "header rows".
     n_rows = len(frame) - 2
@@ -34,7 +34,7 @@ def find_params(frame, nodes, cols_x, flexible_demand, co2_emissions):
         node = data("node prod", i)
         prod_mc[node, p] = data("mc prod", i)
         prod_cap[node, p] = data("cap prod", i)
-        if co2_emissions:
+        if ces or cat:
             co2[node, p] = data("co2", i)
     
     # Fill actual consumption capacities and marginal costs

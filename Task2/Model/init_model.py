@@ -1,7 +1,7 @@
 
 import pyomo.environ as pyo
 
-def init_model(data: dict, flexible_demand: bool, co2_emissions: bool):
+def init_model(data: dict, flexible_demand: bool, ces: bool, cat: bool):
     
     # Create the model
     model = pyo.ConcreteModel()
@@ -29,8 +29,9 @@ def init_model(data: dict, flexible_demand: bool, co2_emissions: bool):
     if flexible_demand:
         model.cons_mc = pyo.Param(model.nodes, model.consumers, initialize = data["cons_mc"])
     
-    # Optionally include the CO2 emissions as a parameter
-    if co2_emissions:
+    # Optionally include the CO2 emissions as a parameter if we're in CES or CAT mode
+    # (Clean energy standard or Cap-and-trade)
+    if ces or cat:
         model.co2 = pyo.Param(model.nodes, model.producers, initialize = data["co2"])
     
     return model

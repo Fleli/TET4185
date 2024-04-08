@@ -7,14 +7,14 @@ from ReadData.params import *
 from ReadData.helpers import *
 
 # Read input data from the Excel file handed out.
-def read_data(context, flexible_demand, co2_emissions):
+def read_data(context, flexible_demand, ces, cat):
     
     # Build a Pandas frame by reading the xlsx file.
     frame = pd.read_excel("Input/Problem 2 data.xlsx", context["SHEETNAME"])
     
     # Find nodes and prod/cons parameters (capacities and MCs)
     nodes = find_nodes(frame, context)
-    producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap, co2 = find_params(frame, nodes, context, flexible_demand, co2_emissions)
+    producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap, co2 = find_params(frame, nodes, context, flexible_demand, ces, cat)
     
     print(co2)
     

@@ -20,9 +20,6 @@ def build_x(argv):
     
     task = argv[1]
     
-    cons_mc_in_excel = False
-    flexible_demand = False
-    
     match task:
         case "2":
             x["SHEETNAME"] = "Problem 2.2 - Base case"
@@ -30,22 +27,24 @@ def build_x(argv):
             x["SHEETNAME"] = "Problem 2.3 - Generators"
         case "4d" | "4e":
             x["SHEETNAME"] = "Problem 2.4 - Loads"
-            flexible_demand = (task == "4e")
-        case "5":
+        case "5ces":
             x["SHEETNAME"] = "Problem 2.5 - Environmental"
-            flexible_demand = True
+        case "5cat":
+            x["SHEETNAME"] = "Problem 2.5 - Environmental"
         case _:
             print("Unrecognized task number", task)
             exit(1)
     
-    include_CO2_column = (task == "5")
+    flexible_demand = (task == "4e") or (task[0] == "5")
     cons_mc_in_excel = flexible_demand or (task == "4d")
+    ces = (task == "5ces")
+    cat = (task == "5cat")
     
     # Start index of 0
     index = 0
     
     # Find index for each of the generation related columns
-    for name in ["name prod", "cap prod", "mc prod", "node prod"] + ( ["co2"] if include_CO2_column else [] ) + ["slack prod"]:
+    for name in ["name prod", "cap prod", "mc prod", "node prod"] + ( ["co2"] if ces or cat else [] ) + ["slack prod"]:
         x[name] = index
         index += 1
     
@@ -71,4 +70,4 @@ def build_x(argv):
         print(" ", it)
     print()
     
-    return x, flexible_demand, include_CO2_column
+    return x, flexible_demand, ces, cat
