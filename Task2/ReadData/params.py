@@ -41,8 +41,7 @@ def find_params(frame, nodes, cols_x, flexible_demand, ces, cat):
     for i in range(len(consumers)):
         c = consumers[i]
         node = data("node cons", i)
-        if flexible_demand:
-            cons_mc[node, c] = data("mc cons", i)
+        cons_mc[node, c] = data("mc cons", i) if flexible_demand else 0
         cons_cap[node, c] = data("cap cons", i)
     
     # Return the data we've found

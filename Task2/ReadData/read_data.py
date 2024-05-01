@@ -24,7 +24,7 @@ def read_data(context, flexible_demand, ces, cat):
     # We interpret NAN values as being willing to pay anything it takes, so we set the WTP extremely high
     for key, value in cons_mc.items():
         if value == "NAN":
-            cons_mc[key] = 5000
+            cons_mc[key] = 0
     
     # Return a dictionary with all the data we've extracted
     return {

@@ -3,6 +3,14 @@ import pyomo.environ as pyo
 
 def init_model(data: dict, flexible_demand: bool, ces: bool, cat: bool):
     
+    for key, value in data.items():
+        print(key)
+        if type(value) == dict:
+            for key, value in value.items():
+                print(key, value)
+            else:
+                print(value)
+    
     # Create the model
     model = pyo.ConcreteModel()
     
@@ -18,16 +26,12 @@ def init_model(data: dict, flexible_demand: bool, ces: bool, cat: bool):
     model.cons_cap = pyo.Param(model.nodes, model.consumers, initialize = data["cons_cap"])
     model.prod_cap = pyo.Param(model.nodes, model.producers, initialize = data["prod_cap"])
     model.prod_mc = pyo.Param(model.nodes, model.producers, initialize = data["prod_mc"])
+    model.cons_mc = pyo.Param(model.nodes, model.consumers, initialize = data["cons_mc"])
     
     # Decision Variables
     model.prod_q = pyo.Var(model.nodes, model.producers, within = pyo.NonNegativeReals)
     model.cons_q = pyo.Var(model.nodes, model.consumers, within = pyo.NonNegativeReals)
-    model.transfer = pyo.Var(model.nodes, model.nodes)
     model.deltas = pyo.Var(model.nodes)
-    
-    # Optionally include additional parameters and variables if demand is flexible
-    if flexible_demand:
-        model.cons_mc = pyo.Param(model.nodes, model.consumers, initialize = data["cons_mc"])
     
     # Optionally include the CO2 emissions as a parameter if we're in CES or CAT mode
     # (Clean energy standard or Cap-and-trade)

@@ -18,6 +18,9 @@ cols_x, flexible_demand, ces, cat = build_x(Process.argv)
 # Read data from the Excel file
 data = read_data(cols_x, flexible_demand, ces, cat)
 
+
+print("CONS:", data["cons_mc"])
+
 # Initialize the model with its sets, parameters and variables
 model = init_model(data, flexible_demand, ces, cat)
 

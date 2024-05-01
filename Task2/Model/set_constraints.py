@@ -1,13 +1,10 @@
 
 import pyomo.environ as pyo
-import numpy as np
 
 def set_model_constraints(model, flexible_demand, ces, cat):
     
     
-    print("FLEXIBLE:", flexible_demand)
-    
-    per_unit_base = 100
+    per_unit_base = 1
     
     
     # === FLOW ===
@@ -17,20 +14,20 @@ def set_model_constraints(model, flexible_demand, ces, cat):
     model.constraint_transfer_min = pyo.Constraint (model.nodes, model.nodes,
         rule = lambda model, node_a, node_b: (
             -model.trans_cap[node_a, node_b]
-            <= model.transfer[node_a, node_b]
+            <= model.susceptances[node_a, node_b] * ( model.deltas[node_a] - model.deltas[node_b] ) * per_unit_base
         )
     )
     
     # Maximum flow
     model.constraint_transfer_max = pyo.Constraint (model.nodes, model.nodes,
         rule = lambda model, node_a, node_b: (
-            model.transfer[node_a, node_b]
+            model.susceptances[node_a, node_b] * ( model.deltas[node_a] - model.deltas[node_b] ) * per_unit_base
             <= model.trans_cap[node_a, node_b]
         )
     )
     
     
-    # === QUANTITY LIMITS ===
+    # === QUANTITIES ===
     
     
     # Each producer has a given maximum production quantity
@@ -48,50 +45,49 @@ def set_model_constraints(model, flexible_demand, ces, cat):
     )
     
     
-    # === FLOW-SUSCEPTANCE-PHASE RELATIONSHIP ===
-    
-    
-    # Require flow A->B be equal to susceptance A->B times difference in bus phase angles
-    model.constraint_flow = pyo.Constraint (model.nodes, model.nodes,
-        rule = lambda model, node_a, node_b: (
-            model.transfer[node_a, node_b] == model.susceptances[node_a, node_b] * ( model.deltas[node_a] - model.deltas[node_b] ) * per_unit_base
-        )
-    )
-    
-    
     # === ENERGY BALANCE ===
     
     
     # Enforce energy balance (production + net transfer = consumption)
     model.constraint_energy_balance = pyo.Constraint (model.nodes, 
         rule = lambda model, node: (
-            sum(model.prod_q[node, p] for p in model.producers)                                                         # Local production
-            + sum(model.susceptances[node, other] * model.deltas[other] * per_unit_base for other in model.nodes)       # + Transfer
-            == sum( model.cons_q[node, q] for q in model.consumers)                                                     # = Consumption
+            (sum(model.cons_q[node, q] for q in model.consumers)
+            - sum(model.prod_q[node, p] for p in model.producers)
+            + sum(model.susceptances[node, other] * (model.deltas[node] - model.deltas[other]) * per_unit_base for other in model.nodes)
+            ) * (1 if flexible_demand else -1)
+            == 0
         )
     )
     
     
-    # === CLEAN ENERGY STANDARD (CES) ===
+    # === ENVIRONMENTAL CONSIDERATIONS ===
     
     
     def constraint_ces(model):
         
         total = 0
-        zero_emission = 0
+        clean = 0
         
         for node in model.nodes:
             for producer in model.producers:
                 prod = model.prod_q[node, producer]
                 total += prod
                 if model.co2[node, producer] == 0:
-                    zero_emission += prod
+                    clean += prod
         
-        return zero_emission >= 0.2 * total
+        return 0.2 * total - clean <= 0
     
     # Require 20% of produced energy to be zero-emission
     if ces:
         model.constraint_ces = pyo.Constraint(rule = constraint_ces)
+        
+        # Convenience variable that makes reading out total emissions easier
+        model.emissions = pyo.Var(within = pyo.Reals)
+        model.find_emissions = pyo.Constraint(
+            rule = lambda model: (
+                model.emissions == sum( model.prod_q[node, p] * model.co2[node, p] for node in model.nodes for p in model.producers )
+            )
+        )
     
     
     def constraint_cat(model):
@@ -117,10 +113,13 @@ def set_model_constraints(model, flexible_demand, ces, cat):
         model.deltas["Node 1"] == 0
     ))
     
-    # If demand is inflexible, consumption equals capacity at all load entities
-    if not flexible_demand:
-        model.constraint_full_load_capacity = pyo.Constraint (model.nodes, model.consumers,
-            rule = lambda model, node, consumer: (
-                model.cons_q[node, consumer] == model.cons_cap[node, consumer]
-            )
-        )
+    
+    def _constraint_min_load(model, node, consumer):
+        if model.cons_mc[node, consumer] == 0:
+            return model.cons_q[node, consumer] >= model.cons_cap[node, consumer]
+        return model.cons_q[node, consumer] >= 0
+    
+    model.constraint_required_load = pyo.Constraint(model.nodes, model.consumers, rule = _constraint_min_load)
+    
+    
+    
