@@ -1,0 +1,2 @@
+
+The `Makefile` in this directory can be invoked with `make` (if it's installed). An argument can be passed through the `T` variable in the Makefile. This argument tells the solver which task you would like to solve. For example, `make T=2` solves task 2-2, while `make T="5cat"` solves task 2-5, cap-and-trade. Please see the `match` statement in `./ReadData/helpers.py` for an exhaustive list of the exact syntax for each subtask.
