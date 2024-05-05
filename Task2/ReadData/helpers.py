@@ -25,7 +25,7 @@ def build_x(argv):
             x["SHEETNAME"] = "Problem 2.2 - Base case"
         case "3":
             x["SHEETNAME"] = "Problem 2.3 - Generators"
-        case "4d" | "4e":
+        case "4d" | "4f":
             x["SHEETNAME"] = "Problem 2.4 - Loads"
         case "5ces":
             x["SHEETNAME"] = "Problem 2.5 - Environmental"
@@ -35,7 +35,7 @@ def build_x(argv):
             print("Unrecognized task number", task)
             exit(1)
     
-    flexible_demand = (task == "4e") or (task[0] == "5")
+    flexible_demand = (task == "4f") or (task[0] == "5")
     cons_mc_in_excel = flexible_demand or (task == "4d")
     ces = (task == "5ces")
     cat = (task == "5cat")
@@ -57,7 +57,7 @@ def build_x(argv):
         index += 1
     
     # ... then 2 or 3 blank spaces (see the Excel file)
-    index += (2 if (task == "4d" or task == "4e") else 3)
+    index += (2 if (task == "4d" or task == "4f") else 3)
     
     # ... then line information (names, capacities and susceptances)
     for name in ["lines", "capacities", "susceptances"]:

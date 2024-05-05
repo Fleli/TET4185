@@ -1,6 +1,14 @@
 
 import pyomo.environ as pyo
 
+# Note regarding some dual values:
+# I've decided to store marginal costs in dictionaries with [node, producer] as key and mc as value. An
+# artifact of this design is that some dual values, for example that of constraint_max_production[Node 1, Gen 2],
+# appear when solving the model. However, these have no practical interpretation, since Gen 2 isn't located at Node 1.
+# The reason its value is (e.g.) -300 when solving T=2, is that the solver thinks [Node 1, Gen 2] could produce at MC = 0
+# instead of [Node 1, Gen 1] at MC = 300, had it only had the capacity.
+
+# This function initializes and returns a concrete model with the given data.
 def init_model(data: dict, flexible_demand: bool, ces: bool, cat: bool):
     
     for key, value in data.items():
