@@ -16,8 +16,6 @@ def read_data(context, flexible_demand, ces, cat):
     nodes = find_nodes(frame, context)
     producers, consumers, prod_mc, prod_cap, cons_mc, cons_cap, co2 = find_params(frame, nodes, context, flexible_demand, ces, cat)
     
-    print(co2)
-    
     # Find line information, including the lines themselves, their capacities, and susceptances B
     lines, line_capacities, line_susceptances = find_lines(frame, nodes, context)
     

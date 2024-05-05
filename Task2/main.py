@@ -2,8 +2,6 @@
 import sys as Process
 Process.dont_write_bytecode = True
 
-print(Process.path)
-
 from ReadData.helpers import *
 from ReadData.read_data import *
 
@@ -18,11 +16,8 @@ cols_x, flexible_demand, ces, cat = build_x(Process.argv)
 # Read data from the Excel file
 data = read_data(cols_x, flexible_demand, ces, cat)
 
-
-print("CONS:", data["cons_mc"])
-
 # Initialize the model with its sets, parameters and variables
-model = init_model(data, flexible_demand, ces, cat)
+model = init_model(data, ces, cat)
 
 # Set the model's objective function
 set_model_objective(model, flexible_demand)

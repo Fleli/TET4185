@@ -64,10 +64,4 @@ def build_x(argv):
         x[name] = index
         index += 1
     
-    print()
-    print("x =")
-    for it in x.items():
-        print(" ", it)
-    print()
-    
     return x, flexible_demand, ces, cat

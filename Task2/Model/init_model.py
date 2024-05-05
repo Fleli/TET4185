@@ -9,15 +9,7 @@ import pyomo.environ as pyo
 # instead of [Node 1, Gen 1] at MC = 300, had it only had the capacity.
 
 # This function initializes and returns a concrete model with the given data.
-def init_model(data: dict, flexible_demand: bool, ces: bool, cat: bool):
-    
-    for key, value in data.items():
-        print(key)
-        if type(value) == dict:
-            for key, value in value.items():
-                print(key, value)
-            else:
-                print(value)
+def init_model(data: dict, ces: bool, cat: bool):
     
     # Create the model
     model = pyo.ConcreteModel()
